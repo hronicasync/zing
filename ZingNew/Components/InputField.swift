@@ -60,9 +60,10 @@ struct OutputField: View {
 
             Spacer(minLength: 0)
 
-            if !text.isEmpty {
-                CopyButton(action: onCopy, isCopied: $isCopied)
-            }
+            // Always show copy button, but disable when empty
+            CopyButton(action: onCopy, isCopied: $isCopied)
+                .disabled(text.isEmpty)
+                .opacity(text.isEmpty ? 0.3 : 1.0)
         }
         .padding(Constants.UI.inputPadding)
         .frame(minHeight: Constants.UI.inputMinHeight)

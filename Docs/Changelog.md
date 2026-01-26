@@ -2,6 +2,65 @@
 
 All notable changes to Zing will be documented in this file.
 
+## [0.3.0] - 2026-01-27
+
+### Added
+- **Apple Translation API** — реальный перевод через Translation framework (macOS 15+)
+  - `TranslationService` — async/await обертка над TranslationSession
+  - Поддержка Russian ↔ English
+  - Fallback сообщение для macOS < 15
+
+- **Global Hotkey** — Shift+Option+T для toggle панели
+  - Регистрация через KeyboardShortcuts в AppDelegate
+  - Escape для закрытия панели
+
+- **Menu Bar Icon** — иконка в системном меню
+  - SF Symbol `character.bubble`
+  - Меню: "Open Zing (⇧⌥T)" и "Quit (⌘Q)"
+
+- **Show/Hide Animations** — плавные переходы
+  - Fade in: 0.2s easeOut
+  - Fade out: 0.12s easeIn
+  - NSAnimationContext для анимаций NSPanel
+
+- **ClipboardService** — сервис для работы с буфером обмена
+  - `copy(_:)` и `paste()` методы
+  - Использует NSPasteboard.general
+
+### Changed
+- **TranslatorViewModel** — полная переработка
+  - Реальный перевод вместо mock
+  - Debounce увеличен до 0.5s
+  - Добавлен `errorMessage: String?` для отображения ошибок
+  - Типизированные языки через `SupportedLanguage` enum
+  - Отмена предыдущего запроса при новом вводе
+
+- **FloatingPanel** — улучшения
+  - `showAnimated()` / `hideAnimated()` с анимациями
+  - NSApp.activate для правильного фокуса
+  - ViewModel создается один раз в FloatingPanelManager
+
+- **TranslatorView** — обновления UI
+  - `@ObservedObject` вместо `@StateObject` (ViewModel передается извне)
+  - ProgressView overlay при переводе
+  - Отображение ошибок красным цветом
+  - CloseButton скрывает панель вместо terminate
+  - Escape key handler через hidden Button
+
+- **InputField** — OutputField improvements
+  - CopyButton всегда видна, но disabled когда текст пуст
+  - Opacity 0.3 для disabled состояния
+
+- **Constants** — новые константы
+  - `Animation.showDuration`, `hideDuration`, `showScale`
+  - `Translation.debounceInterval`
+
+### Technical
+- macOS 15.0+ для Translation API (fallback для старых версий)
+- Состояние ViewModel сохраняется между hide/show панели
+
+---
+
 ## [0.2.0] - 2026-01-27
 
 ### Added

@@ -95,4 +95,16 @@ enum Constants {
         static let radius: CGFloat = 12
         static let y: CGFloat = 8
     }
+
+    /// Animation timing
+    enum Animation {
+        static let showDuration: TimeInterval = 0.2
+        static let hideDuration: TimeInterval = 0.12
+        static let showScale: CGFloat = 0.95
+    }
+
+    /// Translation settings
+    enum Translation {
+        static let debounceInterval: TimeInterval = 0.5
+    }
 }

@@ -8,22 +8,44 @@
 import SwiftUI
 
 struct TranslatorView: View {
-    @StateObject private var viewModel = TranslatorViewModel()
+    @ObservedObject var viewModel: TranslatorViewModel
 
     var body: some View {
         VStack(spacing: Constants.UI.panelItemSpacing) {
             // Top bar: Language pair + Close button
             topBar
 
-            // Input/Output fields
+            // Input/Output fields with loading and error states
             VStack(spacing: Constants.UI.inputSpacing) {
                 SourceInputField(text: $viewModel.sourceText)
 
-                OutputField(
-                    text: viewModel.translatedText,
-                    onCopy: viewModel.copyTranslation,
-                    isCopied: $viewModel.isCopied
-                )
+                // Output field with ProgressView overlay
+                ZStack {
+                    OutputField(
+                        text: viewModel.translatedText,
+                        onCopy: viewModel.copyTranslation,
+                        isCopied: $viewModel.isCopied
+                    )
+
+                    if viewModel.isTranslating {
+                        HStack {
+                            Spacer()
+                            ProgressView()
+                                .progressViewStyle(.circular)
+                                .scaleEffect(0.7)
+                                .tint(Constants.Colors.secondaryText)
+                            Spacer()
+                        }
+                    }
+                }
+
+                // Error message
+                if let error = viewModel.errorMessage {
+                    Text(error)
+                        .font(Constants.Typography.hintFont)
+                        .foregroundColor(.red.opacity(0.8))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
             }
 
             // Bottom hint
@@ -37,6 +59,14 @@ struct TranslatorView: View {
             radius: Constants.Shadow.radius,
             y: Constants.Shadow.y
         )
+        // Escape key handler
+        .background(
+            Button("") {
+                FloatingPanelManager.shared.hidePanel()
+            }
+            .keyboardShortcut(.escape, modifiers: [])
+            .hidden()
+        )
     }
 
     private var topBar: some View {
@@ -48,8 +78,8 @@ struct TranslatorView: View {
             Spacer()
 
             LanguagePair(
-                sourceLanguage: viewModel.sourceLang,
-                targetLanguage: viewModel.targetLang,
+                sourceLanguage: viewModel.sourceLang.displayName,
+                targetLanguage: viewModel.targetLang.displayName,
                 onSourceTap: {
                     // Language selection (placeholder for future)
                 },
@@ -61,14 +91,16 @@ struct TranslatorView: View {
 
             Spacer()
 
-            CloseButton(action: viewModel.closeApp)
+            CloseButton {
+                FloatingPanelManager.shared.hidePanel()
+            }
         }
         .frame(height: Constants.UI.topBarHeight)
     }
 }
 
 #Preview {
-    TranslatorView()
+    TranslatorView(viewModel: TranslatorViewModel())
         .frame(width: 400, height: 300)
         .background(Color.gray)
 }

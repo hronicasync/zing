@@ -2,7 +2,7 @@
 //  TranslatorViewModel.swift
 //  ZingNew
 //
-//  State management for the translator panel with mock translation.
+//  State management for the translator panel with Apple Translation API.
 //
 
 import SwiftUI
@@ -11,31 +11,62 @@ import AppKit
 
 @MainActor
 class TranslatorViewModel: ObservableObject {
+    // MARK: - Published Properties
+
     @Published var sourceText: String = ""
     @Published var translatedText: String = ""
-    @Published var sourceLang: String = "Russian"
-    @Published var targetLang: String = "English"
     @Published var isTranslating: Bool = false
     @Published var isCopied: Bool = false
+    @Published var errorMessage: String?
+
+    // Language selection using TranslationService types (macOS 15+)
+    @Published var sourceLang: SupportedLanguage = .russian
+    @Published var targetLang: SupportedLanguage = .english
+
+    // MARK: - Language Enum (fallback for older macOS)
+
+    enum SupportedLanguage: Equatable {
+        case russian
+        case english
+
+        var displayName: String {
+            switch self {
+            case .russian: return "Russian"
+            case .english: return "English"
+            }
+        }
+    }
+
+    // MARK: - Private Properties
 
     private var translateTask: Task<Void, Never>?
     private var cancellables = Set<AnyCancellable>()
+    private let clipboardService = ClipboardService.shared
+
+    // MARK: - Initialization
 
     init() {
-        // Auto-translate when source text changes (with debounce)
+        setupTextObserver()
+    }
+
+    private func setupTextObserver() {
         $sourceText
-            .debounce(for: .milliseconds(300), scheduler: RunLoop.main)
+            .debounce(for: .seconds(Constants.Translation.debounceInterval), scheduler: RunLoop.main)
             .removeDuplicates()
             .sink { [weak self] _ in
-                self?.mockTranslate()
+                self?.performTranslation()
             }
             .store(in: &cancellables)
     }
 
-    /// Mock translation with simulated delay
-    func mockTranslate() {
-        // Cancel any pending translation
+    // MARK: - Translation
+
+    func performTranslation() {
+        // Cancel previous task
         translateTask?.cancel()
+
+        // Clear error
+        errorMessage = nil
 
         guard !sourceText.isEmpty else {
             translatedText = ""
@@ -46,23 +77,43 @@ class TranslatorViewModel: ObservableObject {
         isTranslating = true
 
         translateTask = Task {
-            // Simulate network delay
-            try? await Task.sleep(nanoseconds: 300_000_000) // 0.3s
+            do {
+                guard !Task.isCancelled else { return }
 
-            guard !Task.isCancelled else { return }
+                if #available(macOS 15.0, *) {
+                    let service = TranslationService.shared
 
-            // Mock translation: just reverse the text direction indicator
-            let mockResult: String
-            if sourceLang == "Russian" {
-                mockResult = "Mock: \(sourceText) → EN"
-            } else {
-                mockResult = "Mock: \(sourceText) → RU"
+                    // Convert local SupportedLanguage to TranslationService.SupportedLanguage
+                    let source: TranslationService.SupportedLanguage = sourceLang == .russian ? .russian : .english
+                    let target: TranslationService.SupportedLanguage = targetLang == .russian ? .russian : .english
+
+                    let result = try await service.translate(
+                        sourceText,
+                        from: source,
+                        to: target
+                    )
+
+                    guard !Task.isCancelled else { return }
+
+                    translatedText = result
+                    isTranslating = false
+                } else {
+                    // Fallback for older macOS
+                    try? await Task.sleep(nanoseconds: 300_000_000)
+                    guard !Task.isCancelled else { return }
+                    translatedText = "[Translation requires macOS 15+] \(sourceText)"
+                    isTranslating = false
+                }
+            } catch {
+                guard !Task.isCancelled else { return }
+
+                errorMessage = error.localizedDescription
+                isTranslating = false
             }
-
-            translatedText = mockResult
-            isTranslating = false
         }
     }
+
+    // MARK: - Actions
 
     /// Swap source and target languages (and their texts)
     func swapLanguages() {
@@ -70,14 +121,21 @@ class TranslatorViewModel: ObservableObject {
             swap(&sourceLang, &targetLang)
             swap(&sourceText, &translatedText)
         }
+
+        // Invalidate translation session since direction changed
+        if #available(macOS 15.0, *) {
+            TranslationService.shared.invalidateSession()
+        }
+
+        // Clear error on swap
+        errorMessage = nil
     }
 
     /// Copy translation to clipboard
     func copyTranslation() {
         guard !translatedText.isEmpty else { return }
 
-        NSPasteboard.general.clearContents()
-        NSPasteboard.general.setString(translatedText, forType: .string)
+        clipboardService.copy(translatedText)
 
         // Show copied state
         withAnimation(.easeInOut(duration: 0.2)) {
@@ -93,8 +151,12 @@ class TranslatorViewModel: ObservableObject {
         }
     }
 
-    /// Close the application
-    func closeApp() {
-        NSApp.terminate(nil)
+    /// Reset all state
+    func reset() {
+        sourceText = ""
+        translatedText = ""
+        errorMessage = nil
+        isTranslating = false
+        isCopied = false
     }
 }
