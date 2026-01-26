@@ -21,13 +21,16 @@ class FloatingPanel: NSPanel {
     ) {
         super.init(
             contentRect: contentRect,
-            styleMask: [.borderless, .nonactivatingPanel],
+            styleMask: [.borderless],
             backing: .buffered,
             defer: false
         )
 
         configurePanel()
     }
+
+    override var canBecomeKey: Bool { true }
+    override var canBecomeMain: Bool { true }
 
     private func configurePanel() {
         // Appearance

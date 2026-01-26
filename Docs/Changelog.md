@@ -2,6 +2,16 @@
 
 All notable changes to Zing will be documented in this file.
 
+## [0.3.1] - 2026-01-27
+
+### Fixed
+- **Input focus** — исправлена проблема с неактивными текстовыми полями
+  - Удалён `.nonactivatingPanel` из styleMask панели
+  - Добавлены `canBecomeKey` и `canBecomeMain` overrides
+  - Теперь панель корректно получает фокус клавиатуры
+
+---
+
 ## [0.3.0] - 2026-01-27
 
 ### Added
