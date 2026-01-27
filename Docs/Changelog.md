@@ -2,6 +2,36 @@
 
 All notable changes to Zing will be documented in this file.
 
+## [0.3.5] - 2026-01-27
+
+### Fixed
+- **Text alignment in input fields** — replaced SwiftUI TextEditor with custom NSTextView wrapper (`NativeTextEditor`)
+  - Full control over `textContainerInset` and `lineFragmentPadding`
+  - Text now aligns perfectly with placeholder
+
+- **Rectangle artifact around panel** — removed `masksToBounds = true` from `NSVisualEffectView` layer
+  - Clipping now handled solely by SwiftUI `.clipShape()` in `GlassBackground`
+
+- **Panel shadow not visible** — switched from SwiftUI shadow to native NSPanel shadow
+  - Set `hasShadow = true` on FloatingPanel
+  - Removed `.shadow()` modifier from TranslatorView
+
+- **Animation clipping** — panel no longer clips during scale animation
+  - Fixed by removing `masksToBounds` from VisualEffectBlur
+
+- **Animation anchor point** — corrected center-bottom anchor point formula
+  - Changed `+offsetY` to `-offsetY` in transform calculation
+  - Panel now grows from bottom-center instead of top-center
+
+- **Output field placeholder** — added "Перевод" placeholder text when output is empty
+
+### Technical
+- New file: `Components/NativeTextEditor.swift` — NSTextView wrapper with placeholder support
+- `PlaceholderTextView` custom class with dynamic height calculation
+- Simplified `VisualEffectBlur` — removed layer configuration (handled by SwiftUI)
+
+---
+
 ## [0.3.4] - 2026-01-27
 
 ### Fixed

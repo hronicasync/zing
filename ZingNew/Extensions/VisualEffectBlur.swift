@@ -32,10 +32,8 @@ struct VisualEffectBlur: NSViewRepresentable {
         view.material = material
         view.blendingMode = blendingMode
         view.state = state
-        view.wantsLayer = true
-        view.layer?.cornerRadius = cornerRadius
-        view.layer?.masksToBounds = true
-        view.layer?.cornerCurve = .continuous
+        // Note: Corner clipping is handled by SwiftUI .clipShape() in GlassBackground
+        // Do NOT use masksToBounds here as it causes animation clipping issues
         return view
     }
 
@@ -43,7 +41,6 @@ struct VisualEffectBlur: NSViewRepresentable {
         nsView.material = material
         nsView.blendingMode = blendingMode
         nsView.state = state
-        nsView.layer?.cornerRadius = cornerRadius
     }
 }
 

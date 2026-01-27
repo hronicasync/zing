@@ -28,47 +28,20 @@ struct SourceInputField: View {
     }
 
     var body: some View {
-        ZStack(alignment: .topLeading) {
-            // Hidden text for height calculation (same frame as TextEditor)
-            Text(text.isEmpty ? " " : text)
-                .font(Constants.Typography.inputFont)
-                .foregroundColor(.clear)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(Constants.UI.inputPadding)
-                .background(
-                    GeometryReader { geometry in
-                        Color.clear.preference(
-                            key: TextHeightPreferenceKey.self,
-                            value: geometry.size.height
-                        )
-                    }
-                )
-
-            // Placeholder
-            if text.isEmpty {
-                Text(placeholder)
-                    .font(Constants.Typography.inputFont)
-                    .foregroundColor(Constants.Colors.secondaryText)
-                    .padding(.horizontal, Constants.UI.inputPadding + 5)
-                    .padding(.top, Constants.UI.inputPadding + 1)
+        NativeTextEditor(
+            text: $text,
+            placeholder: placeholder,
+            font: .systemFont(ofSize: 17),
+            textColor: .white,
+            placeholderColor: .white.withAlphaComponent(0.7),
+            padding: Constants.UI.inputPadding,
+            onHeightChange: { height in
+                textHeight = height
             }
-
-            // Actual TextEditor
-            TextEditor(text: $text)
-                .font(Constants.Typography.inputFont)
-                .foregroundColor(Constants.Colors.primaryText)
-                .scrollContentBackground(.hidden)
-                .scrollDisabled(true)
-                .background(.clear)
-                .padding(.horizontal, Constants.UI.inputPadding)
-                .padding(.vertical, Constants.UI.inputPadding - 4)
-        }
+        )
         .frame(height: calculatedHeight)
         .background(Constants.Colors.inputBackground)
         .clipShape(RoundedRectangle(cornerRadius: Constants.UI.inputCornerRadius))
-        .onPreferenceChange(TextHeightPreferenceKey.self) { height in
-            textHeight = height
-        }
     }
 }
 
@@ -101,9 +74,9 @@ struct OutputField: View {
                         }
                     )
 
-                // Visible text
+                // Visible text or placeholder
                 if text.isEmpty {
-                    Text(" ")
+                    Text("Перевод")
                         .font(Constants.Typography.inputFont)
                         .foregroundColor(Constants.Colors.secondaryText)
                 } else {

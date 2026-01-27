@@ -54,11 +54,7 @@ struct TranslatorView: View {
         .padding(Constants.UI.panelPadding)
         .frame(width: Constants.UI.panelWidth)
         .glassBackground()
-        .shadow(
-            color: Constants.Shadow.color,
-            radius: Constants.Shadow.radius,
-            y: Constants.Shadow.y
-        )
+        // Shadow is handled by native NSPanel.hasShadow
         // Escape key handler
         .background(
             Button("") {

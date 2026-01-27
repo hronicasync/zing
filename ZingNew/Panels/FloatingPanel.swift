@@ -36,7 +36,7 @@ class FloatingPanel: NSPanel {
         // Appearance
         isOpaque = false
         backgroundColor = .clear
-        hasShadow = false // Shadow is handled by SwiftUI
+        hasShadow = true // Native macOS shadow
 
         // Behavior
         level = .floating
@@ -123,12 +123,12 @@ class FloatingPanel: NSPanel {
             return
         }
 
-        // Initial transform: scale down + translate up (so bottom center stays fixed)
+        // Initial transform: scale down + translate down (so bottom center stays fixed)
         let scale = Constants.Animation.showScale
         let offsetY = layer.bounds.height * (1 - scale) / 2
         layer.setAffineTransform(
             CGAffineTransform(scaleX: scale, y: scale)
-                .translatedBy(x: 0, y: offsetY / scale)
+                .translatedBy(x: 0, y: -offsetY / scale)
         )
 
         // Show window
@@ -145,7 +145,7 @@ class FloatingPanel: NSPanel {
         let spring = CASpringAnimation(keyPath: "transform")
         spring.fromValue = CATransform3DMakeAffineTransform(
             CGAffineTransform(scaleX: scale, y: scale)
-                .translatedBy(x: 0, y: offsetY / scale)
+                .translatedBy(x: 0, y: -offsetY / scale)
         )
         spring.toValue = CATransform3DIdentity
         spring.damping = 15
@@ -163,11 +163,11 @@ class FloatingPanel: NSPanel {
             return
         }
 
-        // Target transform: scale down + translate up (bottom center stays fixed)
+        // Target transform: scale down + translate down (bottom center stays fixed)
         let scale = Constants.Animation.showScale
         let offsetY = layer.bounds.height * (1 - scale) / 2
         let targetTransform = CGAffineTransform(scaleX: scale, y: scale)
-            .translatedBy(x: 0, y: offsetY / scale)
+            .translatedBy(x: 0, y: -offsetY / scale)
 
         // Fade animation
         NSAnimationContext.runAnimationGroup { context in
