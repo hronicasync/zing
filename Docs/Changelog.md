@@ -2,6 +2,33 @@
 
 All notable changes to Zing will be documented in this file.
 
+## [0.3.3] - 2026-01-27
+
+### Fixed
+- **Dynamic output height** — поле вывода перевода теперь расширяется при многострочном тексте
+  - Добавлен `TextHeightPreferenceKey` механизм (как у `SourceInputField`)
+  - Минимальная высота 44pt, максимальная 120pt
+  - Текст больше не уходит в скролл
+
+- **Shadow parameters** — исправлены параметры тени согласно Figma
+  - Opacity: 0.35 → 0.25
+  - Radius: 20 → 12
+  - Y offset: 10 → 8
+
+- **Animation origin** — анимация появления панели теперь из центра снизу
+  - Установлен `anchorPoint` слоя на (0.5, 1.0)
+  - Корректный сброс anchor point при скрытии
+
+- **Hotkey hint styling** — исправлена стилизация хинта внизу панели
+  - Шрифт: 15pt → 14pt (согласно Figma)
+  - Добавлена 50% прозрачность ко всему компоненту
+
+### Technical
+- `OutputField` теперь использует `@State` для динамического расчёта высоты
+- `FloatingPanel.showAnimated()` и `hideAnimated()` управляют anchor point слоя
+
+---
+
 ## [0.3.2] - 2026-01-27
 
 ### Fixed

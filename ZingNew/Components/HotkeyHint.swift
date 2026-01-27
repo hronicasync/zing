@@ -46,10 +46,11 @@ struct HotkeyHint: View {
     }
 }
 
-/// Pre-configured hint for copy action
+/// Pre-configured hint for copy action (50% opacity per Figma spec)
 struct CopyHotkeyHint: View {
     var body: some View {
         HotkeyHint(keys: ["⌘", "C"], description: "to copy translation")
+            .opacity(0.5)
     }
 }
 

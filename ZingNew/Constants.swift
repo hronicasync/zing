@@ -87,17 +87,17 @@ enum Constants {
         static let languageFont = Font.system(size: 14, weight: .medium)
         static let inputFont = Font.system(size: 17, weight: .regular)
         static let hintFont = Font.system(size: 13, weight: .regular)
-        static let hotkeyFont = Font.system(size: 15, weight: .regular)
+        static let hotkeyFont = Font.system(size: 14, weight: .regular)
         static let iconFont = Font.system(size: 16, weight: .semibold)
         static let swapIconFont = Font.system(size: 13, weight: .semibold)
         static let chevronFont = Font.system(size: 10, weight: .semibold)
     }
 
-    /// Shadow (enhanced for visibility)
+    /// Shadow (from Figma: Y=8, blur=12, black 25%)
     enum Shadow {
-        static let color = Color.black.opacity(0.35)
-        static let radius: CGFloat = 20
-        static let y: CGFloat = 10
+        static let color = Color.black.opacity(0.25)
+        static let radius: CGFloat = 12
+        static let y: CGFloat = 8
     }
 
     /// Animation timing

@@ -105,7 +105,7 @@ class FloatingPanel: NSPanel {
 
     // MARK: - Animated Show/Hide
 
-    /// Show the panel with fade + scale spring animation (like Spotlight)
+    /// Show the panel with fade + scale spring animation (from bottom center)
     func showAnimated() {
         centerOnMainScreen()
 
@@ -117,7 +117,22 @@ class FloatingPanel: NSPanel {
 
         // Ensure layer-backing for scale animation
         contentView?.wantsLayer = true
-        contentView?.layer?.setAffineTransform(
+        guard let layer = contentView?.layer else {
+            makeKeyAndOrderFront(nil)
+            alphaValue = 1
+            return
+        }
+
+        // Set anchor point to bottom-center for animation origin
+        let bounds = layer.bounds
+        layer.anchorPoint = CGPoint(x: 0.5, y: 1.0)
+        layer.position = CGPoint(
+            x: layer.position.x,
+            y: layer.position.y + bounds.height / 2
+        )
+
+        // Initial scale
+        layer.setAffineTransform(
             CGAffineTransform(scaleX: Constants.Animation.showScale, y: Constants.Animation.showScale)
         )
 
@@ -138,12 +153,18 @@ class FloatingPanel: NSPanel {
         spring.damping = 15
         spring.stiffness = 300
         spring.duration = spring.settlingDuration
-        contentView?.layer?.add(spring, forKey: "scaleIn")
-        contentView?.layer?.setAffineTransform(.identity)
+        layer.add(spring, forKey: "scaleIn")
+        layer.setAffineTransform(.identity)
     }
 
     /// Hide the panel with fade + scale animation
     func hideAnimated(completion: (() -> Void)? = nil) {
+        guard let layer = contentView?.layer else {
+            orderOut(nil)
+            completion?()
+            return
+        }
+
         // Fade animation
         NSAnimationContext.runAnimationGroup { context in
             context.duration = Constants.Animation.hideDuration
@@ -156,12 +177,25 @@ class FloatingPanel: NSPanel {
         scale.toValue = Constants.Animation.showScale
         scale.duration = Constants.Animation.hideDuration
         scale.timingFunction = CAMediaTimingFunction(name: .easeIn)
-        contentView?.layer?.add(scale, forKey: "scaleOut")
+        layer.add(scale, forKey: "scaleOut")
 
-        // Completion after animation
+        // Completion after animation - reset anchor point
         DispatchQueue.main.asyncAfter(deadline: .now() + Constants.Animation.hideDuration) { [weak self] in
-            self?.contentView?.layer?.setAffineTransform(.identity)
-            self?.orderOut(nil)
+            guard let self = self, let layer = self.contentView?.layer else {
+                completion?()
+                return
+            }
+
+            // Reset anchor point to center
+            let bounds = layer.bounds
+            layer.anchorPoint = CGPoint(x: 0.5, y: 0.5)
+            layer.position = CGPoint(
+                x: layer.position.x,
+                y: layer.position.y - bounds.height / 2
+            )
+            layer.setAffineTransform(.identity)
+
+            self.orderOut(nil)
             completion?()
         }
     }

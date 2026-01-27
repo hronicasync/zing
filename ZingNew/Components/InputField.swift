@@ -74,23 +74,45 @@ struct SourceInputField: View {
     }
 }
 
-/// Read-only output field for translation with copy button
+/// Read-only output field for translation with copy button and dynamic height
 struct OutputField: View {
     let text: String
     let onCopy: () -> Void
     @Binding var isCopied: Bool
 
+    @State private var textHeight: CGFloat = Constants.UI.inputMinHeight
+
+    private var calculatedHeight: CGFloat {
+        min(max(textHeight, Constants.UI.inputMinHeight), Constants.UI.inputMaxHeight)
+    }
+
     var body: some View {
         HStack(alignment: .top, spacing: Constants.UI.inputSpacing) {
-            if text.isEmpty {
-                Text(" ")
+            ZStack(alignment: .topLeading) {
+                // Hidden text for height calculation
+                Text(text.isEmpty ? " " : text)
                     .font(Constants.Typography.inputFont)
-                    .foregroundColor(Constants.Colors.secondaryText)
-            } else {
-                Text(text)
-                    .font(Constants.Typography.inputFont)
-                    .foregroundColor(Constants.Colors.primaryText)
-                    .textSelection(.enabled)
+                    .foregroundColor(.clear)
+                    .background(
+                        GeometryReader { geometry in
+                            Color.clear.preference(
+                                key: TextHeightPreferenceKey.self,
+                                value: geometry.size.height
+                            )
+                        }
+                    )
+
+                // Visible text
+                if text.isEmpty {
+                    Text(" ")
+                        .font(Constants.Typography.inputFont)
+                        .foregroundColor(Constants.Colors.secondaryText)
+                } else {
+                    Text(text)
+                        .font(Constants.Typography.inputFont)
+                        .foregroundColor(Constants.Colors.primaryText)
+                        .textSelection(.enabled)
+                }
             }
 
             Spacer(minLength: 0)
@@ -101,9 +123,12 @@ struct OutputField: View {
                 .opacity(text.isEmpty ? 0.3 : 1.0)
         }
         .padding(Constants.UI.inputPadding)
-        .frame(minHeight: Constants.UI.inputMinHeight)
+        .frame(height: calculatedHeight)
         .background(Constants.Colors.inputBackground)
         .clipShape(RoundedRectangle(cornerRadius: Constants.UI.inputCornerRadius))
+        .onPreferenceChange(TextHeightPreferenceKey.self) { height in
+            textHeight = height + Constants.UI.inputPadding * 2
+        }
     }
 }
 
