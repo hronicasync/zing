@@ -11,6 +11,7 @@ struct IconButton: View {
     let icon: String
     let action: () -> Void
     var size: CGSize = Constants.UI.swapButtonSize
+    var iconFont: Font = Constants.Typography.iconFont
 
     @State private var isHovered = false
     @State private var isPressed = false
@@ -27,7 +28,7 @@ struct IconButton: View {
     var body: some View {
         Button(action: action) {
             Image(systemName: icon)
-                .font(Constants.Typography.iconFont)
+                .font(iconFont)
                 .foregroundColor(Constants.Colors.primaryText)
                 .frame(width: size.width, height: size.height)
                 .background(backgroundColor)
@@ -80,7 +81,7 @@ struct CopyButton: View {
             action()
         }) {
             Image(systemName: isCopied ? "checkmark" : "doc.on.doc")
-                .font(.system(size: Constants.UI.iconSize, weight: .medium))
+                .font(.system(size: Constants.UI.copyIconSize, weight: .medium))
                 .foregroundColor(isCopied ? .green : Constants.Colors.primaryText.opacity(isHovered ? 1.0 : 0.6))
                 .contentTransition(.symbolEffect(.replace))
         }

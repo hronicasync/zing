@@ -65,10 +65,16 @@ struct LanguagePair: View {
     var body: some View {
         HStack(spacing: Constants.UI.languagePairSpacing) {
             LanguageSelector(language: sourceLanguage, action: onSourceTap)
+                .frame(minWidth: Constants.UI.languageSelectorMinWidth, alignment: .trailing)
 
-            IconButton(icon: "arrow.left.arrow.right", action: onSwap)
+            IconButton(
+                icon: "arrow.left.arrow.right",
+                action: onSwap,
+                iconFont: Constants.Typography.swapIconFont
+            )
 
             LanguageSelector(language: targetLanguage, action: onTargetTap)
+                .frame(minWidth: Constants.UI.languageSelectorMinWidth, alignment: .leading)
         }
     }
 }

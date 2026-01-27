@@ -37,6 +37,7 @@ enum Constants {
 
         // Input field
         static let inputMinHeight: CGFloat = 44
+        static let inputMaxHeight: CGFloat = 120
         static let inputCornerRadius: CGFloat = 12
         static let inputPadding: CGFloat = 12
         static let inputSpacing: CGFloat = 8
@@ -47,6 +48,7 @@ enum Constants {
         static let languageSelectorHeight: CGFloat = 28
         static let languageSelectorPaddingH: CGFloat = 8
         static let languageSelectorPaddingV: CGFloat = 4
+        static let languageSelectorMinWidth: CGFloat = 80
 
         // Hotkey badge
         static let hotkeyBadgeCornerRadius: CGFloat = 4
@@ -59,13 +61,14 @@ enum Constants {
 
         // Icon sizes
         static let iconSize: CGFloat = 20
+        static let copyIconSize: CGFloat = 16
         static let closeIconSize: CGFloat = 16
     }
 
     /// Colors (Dark Theme from Figma)
     enum Colors {
         // Backgrounds with opacity
-        static let panelOverlay = Color.black.opacity(0.10)
+        static let panelOverlay = Color.white.opacity(0.05)
         static let inputBackground = Color.black.opacity(0.25)
         static let buttonDefault = Color.black.opacity(0.35)
         static let buttonHover = Color.black.opacity(0.40)
@@ -86,14 +89,15 @@ enum Constants {
         static let hintFont = Font.system(size: 13, weight: .regular)
         static let hotkeyFont = Font.system(size: 15, weight: .regular)
         static let iconFont = Font.system(size: 16, weight: .semibold)
+        static let swapIconFont = Font.system(size: 13, weight: .semibold)
         static let chevronFont = Font.system(size: 10, weight: .semibold)
     }
 
-    /// Shadow (from Figma)
+    /// Shadow (enhanced for visibility)
     enum Shadow {
-        static let color = Color.black.opacity(0.25)
-        static let radius: CGFloat = 12
-        static let y: CGFloat = 8
+        static let color = Color.black.opacity(0.35)
+        static let radius: CGFloat = 20
+        static let y: CGFloat = 10
     }
 
     /// Animation timing

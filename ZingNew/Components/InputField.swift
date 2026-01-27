@@ -7,35 +7,70 @@
 
 import SwiftUI
 
-/// Editable input field for source text
+// MARK: - Preference Key for dynamic height
+
+private struct TextHeightPreferenceKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = max(value, nextValue())
+    }
+}
+
+/// Editable input field for source text with dynamic height
 struct SourceInputField: View {
     @Binding var text: String
     var placeholder: String = "Введите текст для перевода..."
 
+    @State private var textHeight: CGFloat = Constants.UI.inputMinHeight
+
+    private var calculatedHeight: CGFloat {
+        min(max(textHeight, Constants.UI.inputMinHeight), Constants.UI.inputMaxHeight)
+    }
+
     var body: some View {
         HStack(alignment: .top, spacing: Constants.UI.inputSpacing) {
             ZStack(alignment: .topLeading) {
+                // Hidden text for height calculation
+                Text(text.isEmpty ? " " : text)
+                    .font(Constants.Typography.inputFont)
+                    .foregroundColor(.clear)
+                    .padding(.leading, 5)
+                    .padding(.top, 8)
+                    .background(
+                        GeometryReader { geometry in
+                            Color.clear.preference(
+                                key: TextHeightPreferenceKey.self,
+                                value: geometry.size.height
+                            )
+                        }
+                    )
+
+                // Placeholder
                 if text.isEmpty {
                     Text(placeholder)
                         .font(Constants.Typography.inputFont)
                         .foregroundColor(Constants.Colors.secondaryText)
-                        .padding(.top, 0)
+                        .padding(.leading, 5)
+                        .padding(.top, 8)
                 }
 
+                // Actual TextEditor
                 TextEditor(text: $text)
                     .font(Constants.Typography.inputFont)
                     .foregroundColor(Constants.Colors.primaryText)
                     .scrollContentBackground(.hidden)
                     .background(.clear)
-                    .frame(minHeight: 20)
             }
 
             Spacer(minLength: 0)
         }
         .padding(Constants.UI.inputPadding)
-        .frame(minHeight: Constants.UI.inputMinHeight)
+        .frame(height: calculatedHeight)
         .background(Constants.Colors.inputBackground)
         .clipShape(RoundedRectangle(cornerRadius: Constants.UI.inputCornerRadius))
+        .onPreferenceChange(TextHeightPreferenceKey.self) { height in
+            textHeight = height + Constants.UI.inputPadding * 2
+        }
     }
 }
 

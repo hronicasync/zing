@@ -2,6 +2,49 @@
 
 All notable changes to Zing will be documented in this file.
 
+## [0.3.2] - 2026-01-27
+
+### Fixed
+- **Placeholder alignment** — курсор больше не перекрывает текст placeholder
+  - Добавлен padding к placeholder (leading: 5pt, top: 8pt)
+
+- **Dynamic input height** — поле ввода теперь расширяется при многострочном тексте
+  - Минимальная высота 44pt, максимальная 120pt
+  - Используется PreferenceKey для расчёта высоты
+
+- **Corner artifacts** — убраны артефакты на закруглённых углах панели
+  - Добавлен cornerRadius к layer NSVisualEffectView
+  - Используется cornerCurve: .continuous для плавных углов
+
+- **Swap button stability** — кнопка swap больше не двигается при смене языков
+  - Фиксированная минимальная ширина для language selectors (80pt)
+
+### Changed
+- **Glass effect** — изменён material с .hudWindow на .popover
+  - Более прозрачный и светлый эффект, похожий на Spotlight
+  - Overlay изменён на white.opacity(0.05)
+
+- **Shadow enhancement** — усилена тень панели
+  - Opacity: 0.25 → 0.35
+  - Radius: 12 → 20
+  - Y offset: 8 → 10
+
+- **Icon sizes** — уменьшены размеры иконок
+  - Swap icon: 16pt → 13pt
+  - Copy icon: 20pt → 16pt
+
+- **Panel animation** — анимация появления как у Spotlight (Tahoe)
+  - Добавлен scale transform (0.95 → 1.0)
+  - Spring animation с damping: 15, stiffness: 300
+  - Fade + scale для появления и скрытия
+
+### Technical
+- Новые константы: `inputMaxHeight`, `copyIconSize`, `swapIconFont`, `languageSelectorMinWidth`
+- `IconButton` теперь принимает параметр `iconFont`
+- `VisualEffectBlur` принимает `cornerRadius` параметр
+
+---
+
 ## [0.3.1] - 2026-01-27
 
 ### Fixed

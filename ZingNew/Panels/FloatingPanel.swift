@@ -105,7 +105,7 @@ class FloatingPanel: NSPanel {
 
     // MARK: - Animated Show/Hide
 
-    /// Show the panel with fade-in animation
+    /// Show the panel with fade + scale spring animation (like Spotlight)
     func showAnimated() {
         centerOnMainScreen()
 
@@ -115,26 +115,52 @@ class FloatingPanel: NSPanel {
         // Initial state for animation
         alphaValue = 0
 
+        // Ensure layer-backing for scale animation
+        contentView?.wantsLayer = true
+        contentView?.layer?.setAffineTransform(
+            CGAffineTransform(scaleX: Constants.Animation.showScale, y: Constants.Animation.showScale)
+        )
+
         // Show window
         makeKeyAndOrderFront(nil)
 
-        // Animate in
+        // Fade animation
         NSAnimationContext.runAnimationGroup { context in
-            context.duration = Constants.Animation.showDuration
+            context.duration = 0.25
             context.timingFunction = CAMediaTimingFunction(name: .easeOut)
-
             animator().alphaValue = 1
         }
+
+        // Spring scale animation
+        let spring = CASpringAnimation(keyPath: "transform.scale")
+        spring.fromValue = Constants.Animation.showScale
+        spring.toValue = 1.0
+        spring.damping = 15
+        spring.stiffness = 300
+        spring.duration = spring.settlingDuration
+        contentView?.layer?.add(spring, forKey: "scaleIn")
+        contentView?.layer?.setAffineTransform(.identity)
     }
 
-    /// Hide the panel with fade-out animation
+    /// Hide the panel with fade + scale animation
     func hideAnimated(completion: (() -> Void)? = nil) {
+        // Fade animation
         NSAnimationContext.runAnimationGroup { context in
             context.duration = Constants.Animation.hideDuration
             context.timingFunction = CAMediaTimingFunction(name: .easeIn)
-
             animator().alphaValue = 0
-        } completionHandler: { [weak self] in
+        }
+
+        // Scale animation
+        let scale = CABasicAnimation(keyPath: "transform.scale")
+        scale.toValue = Constants.Animation.showScale
+        scale.duration = Constants.Animation.hideDuration
+        scale.timingFunction = CAMediaTimingFunction(name: .easeIn)
+        contentView?.layer?.add(scale, forKey: "scaleOut")
+
+        // Completion after animation
+        DispatchQueue.main.asyncAfter(deadline: .now() + Constants.Animation.hideDuration) { [weak self] in
+            self?.contentView?.layer?.setAffineTransform(.identity)
             self?.orderOut(nil)
             completion?()
         }

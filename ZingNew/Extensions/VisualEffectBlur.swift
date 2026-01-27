@@ -13,15 +13,18 @@ struct VisualEffectBlur: NSViewRepresentable {
     var material: NSVisualEffectView.Material
     var blendingMode: NSVisualEffectView.BlendingMode
     var state: NSVisualEffectView.State
+    var cornerRadius: CGFloat
 
     init(
-        material: NSVisualEffectView.Material = .hudWindow,
+        material: NSVisualEffectView.Material = .popover,
         blendingMode: NSVisualEffectView.BlendingMode = .behindWindow,
-        state: NSVisualEffectView.State = .active
+        state: NSVisualEffectView.State = .active,
+        cornerRadius: CGFloat = 0
     ) {
         self.material = material
         self.blendingMode = blendingMode
         self.state = state
+        self.cornerRadius = cornerRadius
     }
 
     func makeNSView(context: Context) -> NSVisualEffectView {
@@ -30,6 +33,9 @@ struct VisualEffectBlur: NSViewRepresentable {
         view.blendingMode = blendingMode
         view.state = state
         view.wantsLayer = true
+        view.layer?.cornerRadius = cornerRadius
+        view.layer?.masksToBounds = true
+        view.layer?.cornerCurve = .continuous
         return view
     }
 
@@ -37,6 +43,7 @@ struct VisualEffectBlur: NSViewRepresentable {
         nsView.material = material
         nsView.blendingMode = blendingMode
         nsView.state = state
+        nsView.layer?.cornerRadius = cornerRadius
     }
 }
 
@@ -49,13 +56,14 @@ struct GlassBackground: ViewModifier {
             .background(
                 ZStack {
                     VisualEffectBlur(
-                        material: .hudWindow,
+                        material: .popover,
                         blendingMode: .behindWindow,
-                        state: .active
+                        state: .active,
+                        cornerRadius: cornerRadius
                     )
                     Constants.Colors.panelOverlay
                 }
-                .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
+                .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
             )
     }
 }
