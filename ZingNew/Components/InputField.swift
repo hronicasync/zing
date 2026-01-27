@@ -28,48 +28,46 @@ struct SourceInputField: View {
     }
 
     var body: some View {
-        HStack(alignment: .top, spacing: Constants.UI.inputSpacing) {
-            ZStack(alignment: .topLeading) {
-                // Hidden text for height calculation
-                Text(text.isEmpty ? " " : text)
-                    .font(Constants.Typography.inputFont)
-                    .foregroundColor(.clear)
-                    .padding(.leading, 5)
-                    .padding(.top, 8)
-                    .background(
-                        GeometryReader { geometry in
-                            Color.clear.preference(
-                                key: TextHeightPreferenceKey.self,
-                                value: geometry.size.height
-                            )
-                        }
-                    )
+        ZStack(alignment: .topLeading) {
+            // Hidden text for height calculation (same frame as TextEditor)
+            Text(text.isEmpty ? " " : text)
+                .font(Constants.Typography.inputFont)
+                .foregroundColor(.clear)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(Constants.UI.inputPadding)
+                .background(
+                    GeometryReader { geometry in
+                        Color.clear.preference(
+                            key: TextHeightPreferenceKey.self,
+                            value: geometry.size.height
+                        )
+                    }
+                )
 
-                // Placeholder
-                if text.isEmpty {
-                    Text(placeholder)
-                        .font(Constants.Typography.inputFont)
-                        .foregroundColor(Constants.Colors.secondaryText)
-                        .padding(.leading, 5)
-                        .padding(.top, 8)
-                }
-
-                // Actual TextEditor
-                TextEditor(text: $text)
+            // Placeholder
+            if text.isEmpty {
+                Text(placeholder)
                     .font(Constants.Typography.inputFont)
-                    .foregroundColor(Constants.Colors.primaryText)
-                    .scrollContentBackground(.hidden)
-                    .background(.clear)
+                    .foregroundColor(Constants.Colors.secondaryText)
+                    .padding(.horizontal, Constants.UI.inputPadding + 5)
+                    .padding(.top, Constants.UI.inputPadding + 1)
             }
 
-            Spacer(minLength: 0)
+            // Actual TextEditor
+            TextEditor(text: $text)
+                .font(Constants.Typography.inputFont)
+                .foregroundColor(Constants.Colors.primaryText)
+                .scrollContentBackground(.hidden)
+                .scrollDisabled(true)
+                .background(.clear)
+                .padding(.horizontal, Constants.UI.inputPadding)
+                .padding(.vertical, Constants.UI.inputPadding - 4)
         }
-        .padding(Constants.UI.inputPadding)
         .frame(height: calculatedHeight)
         .background(Constants.Colors.inputBackground)
         .clipShape(RoundedRectangle(cornerRadius: Constants.UI.inputCornerRadius))
         .onPreferenceChange(TextHeightPreferenceKey.self) { height in
-            textHeight = height + Constants.UI.inputPadding * 2
+            textHeight = height
         }
     }
 }
@@ -93,6 +91,7 @@ struct OutputField: View {
                 Text(text.isEmpty ? " " : text)
                     .font(Constants.Typography.inputFont)
                     .foregroundColor(.clear)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .background(
                         GeometryReader { geometry in
                             Color.clear.preference(
@@ -112,10 +111,9 @@ struct OutputField: View {
                         .font(Constants.Typography.inputFont)
                         .foregroundColor(Constants.Colors.primaryText)
                         .textSelection(.enabled)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
-
-            Spacer(minLength: 0)
 
             // Always show copy button, but disable when empty
             CopyButton(action: onCopy, isCopied: $isCopied)

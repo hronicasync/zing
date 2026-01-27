@@ -123,17 +123,12 @@ class FloatingPanel: NSPanel {
             return
         }
 
-        // Set anchor point to bottom-center for animation origin
-        let bounds = layer.bounds
-        layer.anchorPoint = CGPoint(x: 0.5, y: 1.0)
-        layer.position = CGPoint(
-            x: layer.position.x,
-            y: layer.position.y + bounds.height / 2
-        )
-
-        // Initial scale
+        // Initial transform: scale down + translate up (so bottom center stays fixed)
+        let scale = Constants.Animation.showScale
+        let offsetY = layer.bounds.height * (1 - scale) / 2
         layer.setAffineTransform(
-            CGAffineTransform(scaleX: Constants.Animation.showScale, y: Constants.Animation.showScale)
+            CGAffineTransform(scaleX: scale, y: scale)
+                .translatedBy(x: 0, y: offsetY / scale)
         )
 
         // Show window
@@ -147,13 +142,16 @@ class FloatingPanel: NSPanel {
         }
 
         // Spring scale animation
-        let spring = CASpringAnimation(keyPath: "transform.scale")
-        spring.fromValue = Constants.Animation.showScale
-        spring.toValue = 1.0
+        let spring = CASpringAnimation(keyPath: "transform")
+        spring.fromValue = CATransform3DMakeAffineTransform(
+            CGAffineTransform(scaleX: scale, y: scale)
+                .translatedBy(x: 0, y: offsetY / scale)
+        )
+        spring.toValue = CATransform3DIdentity
         spring.damping = 15
         spring.stiffness = 300
         spring.duration = spring.settlingDuration
-        layer.add(spring, forKey: "scaleIn")
+        layer.add(spring, forKey: "transformIn")
         layer.setAffineTransform(.identity)
     }
 
@@ -165,6 +163,12 @@ class FloatingPanel: NSPanel {
             return
         }
 
+        // Target transform: scale down + translate up (bottom center stays fixed)
+        let scale = Constants.Animation.showScale
+        let offsetY = layer.bounds.height * (1 - scale) / 2
+        let targetTransform = CGAffineTransform(scaleX: scale, y: scale)
+            .translatedBy(x: 0, y: offsetY / scale)
+
         // Fade animation
         NSAnimationContext.runAnimationGroup { context in
             context.duration = Constants.Animation.hideDuration
@@ -172,30 +176,17 @@ class FloatingPanel: NSPanel {
             animator().alphaValue = 0
         }
 
-        // Scale animation
-        let scale = CABasicAnimation(keyPath: "transform.scale")
-        scale.toValue = Constants.Animation.showScale
-        scale.duration = Constants.Animation.hideDuration
-        scale.timingFunction = CAMediaTimingFunction(name: .easeIn)
-        layer.add(scale, forKey: "scaleOut")
+        // Scale + translate animation
+        let anim = CABasicAnimation(keyPath: "transform")
+        anim.toValue = CATransform3DMakeAffineTransform(targetTransform)
+        anim.duration = Constants.Animation.hideDuration
+        anim.timingFunction = CAMediaTimingFunction(name: .easeIn)
+        layer.add(anim, forKey: "transformOut")
 
-        // Completion after animation - reset anchor point
+        // Completion after animation
         DispatchQueue.main.asyncAfter(deadline: .now() + Constants.Animation.hideDuration) { [weak self] in
-            guard let self = self, let layer = self.contentView?.layer else {
-                completion?()
-                return
-            }
-
-            // Reset anchor point to center
-            let bounds = layer.bounds
-            layer.anchorPoint = CGPoint(x: 0.5, y: 0.5)
-            layer.position = CGPoint(
-                x: layer.position.x,
-                y: layer.position.y - bounds.height / 2
-            )
-            layer.setAffineTransform(.identity)
-
-            self.orderOut(nil)
+            self?.contentView?.layer?.setAffineTransform(.identity)
+            self?.orderOut(nil)
             completion?()
         }
     }

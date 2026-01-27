@@ -2,6 +2,29 @@
 
 All notable changes to Zing will be documented in this file.
 
+## [0.3.4] - 2026-01-27
+
+### Fixed
+- **Panel positioning bug** — панель больше не "уезжает" после повторных показов
+  - Убраны некорректные манипуляции с `anchorPoint` layer'а
+  - Анимация из центра снизу теперь через `scale + translate` transform
+
+- **Close button (X)** — крестик снова работает корректно
+
+- **Animation origin** — анимация появления теперь из центра снизу (не из угла)
+  - Используется комбинация scale + translateY вместо anchorPoint
+  - Формула: `translateY = bounds.height * (1 - scale) / 2`
+
+- **Input field layout** — исправлено выравнивание текста в полях ввода/вывода
+  - Одинаковые padding'и для hidden text и TextEditor
+  - Отключен scroll в TextEditor (`scrollDisabled`)
+
+### Technical
+- `FloatingPanel.showAnimated()` использует CATransform3D вместо anchorPoint
+- `SourceInputField` переработан для корректного расчёта высоты
+
+---
+
 ## [0.3.3] - 2026-01-27
 
 ### Fixed
