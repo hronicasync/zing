@@ -13,6 +13,9 @@ class FloatingPanel: NSPanel {
 
     private var originalSize: NSSize = .zero
 
+    /// Extra padding around content to allow spring overshoot without clipping
+    private static let animationPadding: CGFloat = 20
+
     override init(
         contentRect: NSRect,
         styleMask style: NSWindow.StyleMask,
@@ -69,15 +72,34 @@ class FloatingPanel: NSPanel {
         // Create SwiftUI hosting view with injected ViewModel
         let translatorView = TranslatorView(viewModel: viewModel)
         let hostingView = NSHostingView(rootView: translatorView)
-        hostingView.translatesAutoresizingMaskIntoConstraints = false
-
-        // Set the content view
-        panel.contentView = hostingView
-
-        // Size to fit content
         let fittingSize = hostingView.fittingSize
-        panel.setContentSize(fittingSize)
-        panel.originalSize = fittingSize
+
+        // Wrapper view with extra padding for spring animation overshoot
+        let padding = animationPadding
+        let wrapperSize = NSSize(
+            width: fittingSize.width + padding * 2,
+            height: fittingSize.height + padding * 2
+        )
+
+        let wrapperView = NSView(frame: NSRect(origin: .zero, size: wrapperSize))
+        wrapperView.wantsLayer = true
+        wrapperView.layer?.masksToBounds = false  // Critical: allow spring overshoot
+
+        // Center hostingView inside wrapper with padding
+        hostingView.wantsLayer = true
+        hostingView.layer?.masksToBounds = false
+        hostingView.frame = NSRect(
+            x: padding,
+            y: padding,
+            width: fittingSize.width,
+            height: fittingSize.height
+        )
+        wrapperView.addSubview(hostingView)
+
+        // Set wrapper as content view
+        panel.contentView = wrapperView
+        panel.setContentSize(wrapperSize)
+        panel.originalSize = wrapperSize
 
         // Center on main screen
         panel.centerOnMainScreen()
@@ -115,32 +137,34 @@ class FloatingPanel: NSPanel {
         // Initial state for animation
         alphaValue = 0
 
-        // Ensure layer-backing for scale animation
-        contentView?.wantsLayer = true
-        contentView?.layer?.masksToBounds = false
-        guard let layer = contentView?.layer else {
+        // Get hostingView (first subview of wrapper) for scale animation
+        // This allows spring overshoot to extend into the wrapper padding
+        guard let hostingView = contentView?.subviews.first,
+              let layer = hostingView.layer else {
             makeKeyAndOrderFront(nil)
             alphaValue = 1
             return
         }
 
+        layer.masksToBounds = false
+
         let scale = Constants.Animation.showScale
 
-        // Сохраняем оригинальные значения для восстановления после анимации
+        // Save original values for restoration after animation
         let originalAnchor = layer.anchorPoint
         let originalPosition = layer.position
         let bounds = layer.bounds
 
-        // Bottom-center anchor (0.5, 0.0 в macOS координатах - Y растёт вверх)
+        // Bottom-center anchor (0.5, 0.0 in macOS coordinates - Y grows upward)
         let bottomCenterAnchor = CGPoint(x: 0.5, y: 0.0)
 
-        // Корректируем position чтобы визуально view не сдвинулось при смене anchorPoint
+        // Correct position so view doesn't shift when changing anchorPoint
         let correctedPosition = CGPoint(
             x: layer.frame.origin.x + bottomCenterAnchor.x * bounds.width,
             y: layer.frame.origin.y + bottomCenterAnchor.y * bounds.height
         )
 
-        // Устанавливаем anchorPoint и начальный scale без анимации
+        // Set anchorPoint and initial scale without animation
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         layer.anchorPoint = bottomCenterAnchor
@@ -158,7 +182,7 @@ class FloatingPanel: NSPanel {
             animator().alphaValue = 1
         }
 
-        // Spring scale animation (теперь просто scale, без translate - anchorPoint делает всё сам)
+        // Spring scale animation - anchorPoint handles the grow-from-bottom
         let spring = CASpringAnimation(keyPath: "transform")
         spring.fromValue = CATransform3DMakeScale(scale, scale, 1.0)
         spring.toValue = CATransform3DIdentity
@@ -168,7 +192,7 @@ class FloatingPanel: NSPanel {
         layer.add(spring, forKey: "scaleIn")
         layer.transform = CATransform3DIdentity
 
-        // Восстанавливаем оригинальный anchorPoint после завершения анимации
+        // Restore original anchorPoint after animation completes
         DispatchQueue.main.asyncAfter(deadline: .now() + spring.settlingDuration + 0.05) {
             CATransaction.begin()
             CATransaction.setDisableActions(true)
@@ -181,7 +205,9 @@ class FloatingPanel: NSPanel {
 
     /// Hide the panel with fade + scale animation
     func hideAnimated(completion: (() -> Void)? = nil) {
-        guard let layer = contentView?.layer else {
+        // Get hostingView (first subview of wrapper) for scale animation
+        guard let hostingView = contentView?.subviews.first,
+              let layer = hostingView.layer else {
             orderOut(nil)
             completion?()
             return
@@ -189,21 +215,21 @@ class FloatingPanel: NSPanel {
 
         let scale = Constants.Animation.showScale
 
-        // Сохраняем оригинальные значения
+        // Save original values
         let originalAnchor = layer.anchorPoint
         let originalPosition = layer.position
         let bounds = layer.bounds
 
-        // Bottom-center anchor (0.5, 0.0 в macOS координатах)
+        // Bottom-center anchor (0.5, 0.0 in macOS coordinates)
         let bottomCenterAnchor = CGPoint(x: 0.5, y: 0.0)
 
-        // Корректируем position
+        // Correct position
         let correctedPosition = CGPoint(
             x: layer.frame.origin.x + bottomCenterAnchor.x * bounds.width,
             y: layer.frame.origin.y + bottomCenterAnchor.y * bounds.height
         )
 
-        // Устанавливаем anchorPoint без анимации
+        // Set anchorPoint without animation
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         layer.anchorPoint = bottomCenterAnchor

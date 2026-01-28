@@ -2,6 +2,22 @@
 
 All notable changes to Zing will be documented in this file.
 
+## [0.3.8] - 2026-01-28
+
+### Fixed
+- **Animation clipping (actual fix)** — панель больше не обрезается при spring overshoot
+  - Корневая причина: NSPanel всегда обрезает контент по своим границам, независимо от `masksToBounds`
+  - Решение: wrapper NSView с padding 20pt вокруг контента
+  - Scale анимация теперь применяется к `hostingView` внутри wrapper'а
+  - Spring overshoot расширяется в область padding без обрезки
+
+### Technical
+- `FloatingPanel.animationPadding = 20` — запас для spring overshoot
+- `FloatingPanel.create()` — wrapper NSView вокруг NSHostingView
+- `showAnimated()` / `hideAnimated()` — анимируют `hostingView.layer` вместо `contentView.layer`
+
+---
+
 ## [0.3.7] - 2026-01-28
 
 ### Fixed
