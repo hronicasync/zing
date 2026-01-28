@@ -2,6 +2,26 @@
 
 All notable changes to Zing will be documented in this file.
 
+## [0.3.6] - 2026-01-28
+
+### Fixed
+- **Output field text wrapping** — текст в поле вывода теперь переносится на новые строки
+  - Добавлен `.fixedSize(horizontal: false, vertical: true)` к Text элементам
+  - Текст больше не уходит в одну строку
+
+- **Animation clipping (final fix)** — панель больше не обрезается при spring анимации
+  - Добавлен `contentView?.layer?.masksToBounds = false` в FloatingPanel
+
+### Changed
+- **Input max height doubled** — максимальная высота инпутов увеличена с 120pt до 240pt
+  - Теперь помещается больше текста (~8-10 строк вместо 4-5)
+
+### Technical
+- `OutputField` — `.fixedSize()` для корректного переноса строк в SwiftUI Text
+- `FloatingPanel.showAnimated()` — явное отключение masksToBounds на layer
+
+---
+
 ## [0.3.5] - 2026-01-27
 
 ### Fixed

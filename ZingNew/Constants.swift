@@ -37,7 +37,7 @@ enum Constants {
 
         // Input field
         static let inputMinHeight: CGFloat = 44
-        static let inputMaxHeight: CGFloat = 120
+        static let inputMaxHeight: CGFloat = 240
         static let inputCornerRadius: CGFloat = 12
         static let inputPadding: CGFloat = 12
         static let inputSpacing: CGFloat = 8

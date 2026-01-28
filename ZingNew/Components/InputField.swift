@@ -64,6 +64,7 @@ struct OutputField: View {
                 Text(text.isEmpty ? " " : text)
                     .font(Constants.Typography.inputFont)
                     .foregroundColor(.clear)
+                    .fixedSize(horizontal: false, vertical: true)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(
                         GeometryReader { geometry in
@@ -84,6 +85,7 @@ struct OutputField: View {
                         .font(Constants.Typography.inputFont)
                         .foregroundColor(Constants.Colors.primaryText)
                         .textSelection(.enabled)
+                        .fixedSize(horizontal: false, vertical: true)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }

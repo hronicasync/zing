@@ -117,6 +117,7 @@ class FloatingPanel: NSPanel {
 
         // Ensure layer-backing for scale animation
         contentView?.wantsLayer = true
+        contentView?.layer?.masksToBounds = false
         guard let layer = contentView?.layer else {
             makeKeyAndOrderFront(nil)
             alphaValue = 1
