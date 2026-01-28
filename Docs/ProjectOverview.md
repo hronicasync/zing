@@ -93,6 +93,12 @@ let response = try await session.translate(text)
 - `NSStatusItem` с SF Symbol `character.bubble`
 - Меню: "Open Zing (⇧⌥T)" и "Quit (⌘Q)"
 
+### Keyboard Shortcuts
+- **Shift+Option+T** — глобальный хоткей показа/скрытия панели
+- **Escape** — скрыть панель
+- **Cmd+C** — копировать перевод (или выделенный текст, если есть)
+- **Opt+X** — очистить поле ввода
+
 ## Зависимости
 
 - **KeyboardShortcuts** (SPM) — глобальные хоткеи

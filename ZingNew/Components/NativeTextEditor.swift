@@ -17,6 +17,7 @@ struct NativeTextEditor: NSViewRepresentable {
     var placeholderColor: NSColor = .white.withAlphaComponent(0.7)
     var padding: CGFloat = 12
     var onHeightChange: ((CGFloat) -> Void)?
+    var onCopyWithoutSelection: (() -> Void)?
 
     func makeCoordinator() -> Coordinator {
         Coordinator(self)
@@ -50,6 +51,9 @@ struct NativeTextEditor: NSViewRepresentable {
         // Focus ring
         textView.focusRingType = .none
 
+        // Copy without selection callback
+        textView.onCopyWithoutSelection = onCopyWithoutSelection
+
         textView.delegate = context.coordinator
 
         scrollView.documentView = textView
@@ -67,6 +71,7 @@ struct NativeTextEditor: NSViewRepresentable {
         textView.font = font
         textView.textColor = textColor
         textView.textContainerInset = NSSize(width: padding, height: padding)
+        textView.onCopyWithoutSelection = onCopyWithoutSelection
 
         // Calculate and report height
         DispatchQueue.main.async {
@@ -102,6 +107,18 @@ class PlaceholderTextView: NSTextView {
     }
     var placeholderColor: NSColor = .secondaryLabelColor
     var placeholderFont: NSFont = .systemFont(ofSize: 17)
+    var onCopyWithoutSelection: (() -> Void)?
+
+    override func performKeyEquivalent(with event: NSEvent) -> Bool {
+        // Cmd+C when no selection → copy translation instead
+        if event.modifierFlags.contains(.command) && event.charactersIgnoringModifiers == "c" {
+            if selectedRange().length == 0 {
+                onCopyWithoutSelection?()
+                return true
+            }
+        }
+        return super.performKeyEquivalent(with: event)
+    }
 
     var contentHeight: CGFloat {
         guard let layoutManager = layoutManager,

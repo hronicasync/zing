@@ -17,7 +17,10 @@ struct TranslatorView: View {
 
             // Input/Output fields with loading and error states
             VStack(spacing: Constants.UI.inputSpacing) {
-                SourceInputField(text: $viewModel.sourceText)
+                SourceInputField(
+                    text: $viewModel.sourceText,
+                    onCopyWithoutSelection: viewModel.copyTranslation
+                )
 
                 // Output field with ProgressView overlay
                 ZStack {
@@ -55,13 +58,23 @@ struct TranslatorView: View {
         .frame(width: Constants.UI.panelWidth)
         .glassBackground()
         // Shadow is handled by native NSPanel.hasShadow
-        // Escape key handler
+        // Keyboard shortcuts
         .background(
-            Button("") {
-                FloatingPanelManager.shared.hidePanel()
+            Group {
+                // Escape — hide panel
+                Button("") {
+                    FloatingPanelManager.shared.hidePanel()
+                }
+                .keyboardShortcut(.escape, modifiers: [])
+                .hidden()
+
+                // Opt+X — clear input
+                Button("") {
+                    viewModel.clearInput()
+                }
+                .keyboardShortcut("x", modifiers: .option)
+                .hidden()
             }
-            .keyboardShortcut(.escape, modifiers: [])
-            .hidden()
         )
     }
 

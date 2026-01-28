@@ -151,6 +151,12 @@ class TranslatorViewModel: ObservableObject {
         }
     }
 
+    /// Clear input field (Opt+X shortcut)
+    func clearInput() {
+        sourceText = ""
+        // translatedText will be cleared automatically via debounced observer
+    }
+
     /// Reset all state
     func reset() {
         sourceText = ""
