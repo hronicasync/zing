@@ -18,6 +18,7 @@ struct NativeTextEditor: NSViewRepresentable {
     var padding: CGFloat = 12
     var onHeightChange: ((CGFloat) -> Void)?
     var onCopyWithoutSelection: (() -> Void)?
+    var onClearInput: (() -> Void)?
 
     func makeCoordinator() -> Coordinator {
         Coordinator(self)
@@ -51,8 +52,9 @@ struct NativeTextEditor: NSViewRepresentable {
         // Focus ring
         textView.focusRingType = .none
 
-        // Copy without selection callback
+        // Keyboard shortcut callbacks
         textView.onCopyWithoutSelection = onCopyWithoutSelection
+        textView.onClearInput = onClearInput
 
         textView.delegate = context.coordinator
 
@@ -72,6 +74,7 @@ struct NativeTextEditor: NSViewRepresentable {
         textView.textColor = textColor
         textView.textContainerInset = NSSize(width: padding, height: padding)
         textView.onCopyWithoutSelection = onCopyWithoutSelection
+        textView.onClearInput = onClearInput
 
         // Calculate and report height
         DispatchQueue.main.async {
@@ -108,15 +111,30 @@ class PlaceholderTextView: NSTextView {
     var placeholderColor: NSColor = .secondaryLabelColor
     var placeholderFont: NSFont = .systemFont(ofSize: 17)
     var onCopyWithoutSelection: (() -> Void)?
+    var onClearInput: (() -> Void)?
+
+    // Key codes (layout-independent)
+    private static let keyCodeC: UInt16 = 8
+    private static let keyCodeX: UInt16 = 7
 
     override func performKeyEquivalent(with event: NSEvent) -> Bool {
+        let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+
         // Cmd+C when no selection → copy translation instead
-        if event.modifierFlags.contains(.command) && event.charactersIgnoringModifiers == "c" {
+        // Uses keyCode for layout-independent detection (works on any keyboard layout)
+        if flags == .command && event.keyCode == Self.keyCodeC {
             if selectedRange().length == 0 {
                 onCopyWithoutSelection?()
                 return true
             }
         }
+
+        // Opt+X → clear input (layout-independent)
+        if flags == .option && event.keyCode == Self.keyCodeX {
+            onClearInput?()
+            return true
+        }
+
         return super.performKeyEquivalent(with: event)
     }
 

@@ -21,6 +21,7 @@ struct SourceInputField: View {
     @Binding var text: String
     var placeholder: String = "Введите текст для перевода..."
     var onCopyWithoutSelection: (() -> Void)?
+    var onClearInput: (() -> Void)?
 
     @State private var textHeight: CGFloat = Constants.UI.inputMinHeight
 
@@ -39,7 +40,8 @@ struct SourceInputField: View {
             onHeightChange: { height in
                 textHeight = height
             },
-            onCopyWithoutSelection: onCopyWithoutSelection
+            onCopyWithoutSelection: onCopyWithoutSelection,
+            onClearInput: onClearInput
         )
         .frame(height: calculatedHeight)
         .background(Constants.Colors.inputBackground)

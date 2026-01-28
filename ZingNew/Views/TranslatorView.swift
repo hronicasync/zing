@@ -19,7 +19,8 @@ struct TranslatorView: View {
             VStack(spacing: Constants.UI.inputSpacing) {
                 SourceInputField(
                     text: $viewModel.sourceText,
-                    onCopyWithoutSelection: viewModel.copyTranslation
+                    onCopyWithoutSelection: viewModel.copyTranslation,
+                    onClearInput: viewModel.clearInput
                 )
 
                 // Output field with ProgressView overlay
@@ -60,21 +61,13 @@ struct TranslatorView: View {
         // Shadow is handled by native NSPanel.hasShadow
         // Keyboard shortcuts
         .background(
-            Group {
-                // Escape — hide panel
-                Button("") {
-                    FloatingPanelManager.shared.hidePanel()
-                }
-                .keyboardShortcut(.escape, modifiers: [])
-                .hidden()
-
-                // Opt+X — clear input
-                Button("") {
-                    viewModel.clearInput()
-                }
-                .keyboardShortcut("x", modifiers: .option)
-                .hidden()
+            // Escape — hide panel
+            Button("") {
+                FloatingPanelManager.shared.hidePanel()
             }
+            .keyboardShortcut(.escape, modifiers: [])
+            .hidden()
+            // Opt+X handled in NativeTextEditor via keyCode (layout-independent)
         )
     }
 
