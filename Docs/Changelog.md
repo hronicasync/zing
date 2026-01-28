@@ -2,6 +2,26 @@
 
 All notable changes to Zing will be documented in this file.
 
+## [0.3.7] - 2026-01-28
+
+### Fixed
+- **Animation clipping (real fix)** — панель больше не обрезается при spring overshoot
+  - Corner radius теперь через `NSVisualEffectView.layer` вместо SwiftUI `clipShape`
+  - Убран `clipShape` с внешнего ZStack в `GlassBackground`
+  - Overlay клиппится отдельно
+
+- **Animation anchor point** — анимация появления теперь корректно идёт от нижнего центра
+  - Явная установка `anchorPoint = (0.5, 0.0)` (bottom-center в macOS координатах)
+  - Корректировка `position` при смене anchorPoint чтобы view не сдвигалось
+  - Восстановление оригинального anchorPoint после завершения анимации
+
+### Technical
+- `VisualEffectBlur.makeNSView()` — corner radius через `layer.cornerRadius` + `cornerCurve = .continuous`
+- `GlassBackground` — убран внешний `clipShape`, overlay клиппится отдельно
+- `FloatingPanel.showAnimated()` / `hideAnimated()` — переписаны с правильным anchorPoint
+
+---
+
 ## [0.3.6] - 2026-01-28
 
 ### Fixed

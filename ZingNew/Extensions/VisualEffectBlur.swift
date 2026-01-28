@@ -32,8 +32,16 @@ struct VisualEffectBlur: NSViewRepresentable {
         view.material = material
         view.blendingMode = blendingMode
         view.state = state
-        // Note: Corner clipping is handled by SwiftUI .clipShape() in GlassBackground
-        // Do NOT use masksToBounds here as it causes animation clipping issues
+
+        // Corner radius через layer вместо SwiftUI clipShape
+        // Это позволяет spring анимации выходить за bounds без обрезки
+        if cornerRadius > 0 {
+            view.wantsLayer = true
+            view.layer?.cornerRadius = cornerRadius
+            view.layer?.cornerCurve = .continuous
+            view.layer?.masksToBounds = true  // Только для blur background
+        }
+
         return view
     }
 
@@ -41,6 +49,11 @@ struct VisualEffectBlur: NSViewRepresentable {
         nsView.material = material
         nsView.blendingMode = blendingMode
         nsView.state = state
+
+        // Обновить corner radius при изменении
+        if cornerRadius > 0 {
+            nsView.layer?.cornerRadius = cornerRadius
+        }
     }
 }
 
@@ -52,15 +65,19 @@ struct GlassBackground: ViewModifier {
         content
             .background(
                 ZStack {
+                    // Corner radius применяется через NSVisualEffectView layer
+                    // Это позволяет spring анимации выходить за bounds без обрезки
                     VisualEffectBlur(
                         material: .popover,
                         blendingMode: .behindWindow,
                         state: .active,
                         cornerRadius: cornerRadius
                     )
+                    // Overlay клиппим отдельно
                     Constants.Colors.panelOverlay
+                        .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
                 }
-                .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+                // НЕ применяем clipShape к ZStack - это вызывало обрезку при spring overshoot
             )
     }
 }

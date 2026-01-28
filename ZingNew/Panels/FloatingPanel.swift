@@ -124,13 +124,29 @@ class FloatingPanel: NSPanel {
             return
         }
 
-        // Initial transform: scale down + translate down (so bottom center stays fixed)
         let scale = Constants.Animation.showScale
-        let offsetY = layer.bounds.height * (1 - scale) / 2
-        layer.setAffineTransform(
-            CGAffineTransform(scaleX: scale, y: scale)
-                .translatedBy(x: 0, y: -offsetY / scale)
+
+        // Сохраняем оригинальные значения для восстановления после анимации
+        let originalAnchor = layer.anchorPoint
+        let originalPosition = layer.position
+        let bounds = layer.bounds
+
+        // Bottom-center anchor (0.5, 0.0 в macOS координатах - Y растёт вверх)
+        let bottomCenterAnchor = CGPoint(x: 0.5, y: 0.0)
+
+        // Корректируем position чтобы визуально view не сдвинулось при смене anchorPoint
+        let correctedPosition = CGPoint(
+            x: layer.frame.origin.x + bottomCenterAnchor.x * bounds.width,
+            y: layer.frame.origin.y + bottomCenterAnchor.y * bounds.height
         )
+
+        // Устанавливаем anchorPoint и начальный scale без анимации
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        layer.anchorPoint = bottomCenterAnchor
+        layer.position = correctedPosition
+        layer.transform = CATransform3DMakeScale(scale, scale, 1.0)
+        CATransaction.commit()
 
         // Show window
         makeKeyAndOrderFront(nil)
@@ -142,18 +158,25 @@ class FloatingPanel: NSPanel {
             animator().alphaValue = 1
         }
 
-        // Spring scale animation
+        // Spring scale animation (теперь просто scale, без translate - anchorPoint делает всё сам)
         let spring = CASpringAnimation(keyPath: "transform")
-        spring.fromValue = CATransform3DMakeAffineTransform(
-            CGAffineTransform(scaleX: scale, y: scale)
-                .translatedBy(x: 0, y: -offsetY / scale)
-        )
+        spring.fromValue = CATransform3DMakeScale(scale, scale, 1.0)
         spring.toValue = CATransform3DIdentity
         spring.damping = 15
         spring.stiffness = 300
         spring.duration = spring.settlingDuration
-        layer.add(spring, forKey: "transformIn")
-        layer.setAffineTransform(.identity)
+        layer.add(spring, forKey: "scaleIn")
+        layer.transform = CATransform3DIdentity
+
+        // Восстанавливаем оригинальный anchorPoint после завершения анимации
+        DispatchQueue.main.asyncAfter(deadline: .now() + spring.settlingDuration + 0.05) {
+            CATransaction.begin()
+            CATransaction.setDisableActions(true)
+            layer.anchorPoint = originalAnchor
+            layer.position = originalPosition
+            layer.transform = CATransform3DIdentity
+            CATransaction.commit()
+        }
     }
 
     /// Hide the panel with fade + scale animation
@@ -164,11 +187,28 @@ class FloatingPanel: NSPanel {
             return
         }
 
-        // Target transform: scale down + translate down (bottom center stays fixed)
         let scale = Constants.Animation.showScale
-        let offsetY = layer.bounds.height * (1 - scale) / 2
-        let targetTransform = CGAffineTransform(scaleX: scale, y: scale)
-            .translatedBy(x: 0, y: -offsetY / scale)
+
+        // Сохраняем оригинальные значения
+        let originalAnchor = layer.anchorPoint
+        let originalPosition = layer.position
+        let bounds = layer.bounds
+
+        // Bottom-center anchor (0.5, 0.0 в macOS координатах)
+        let bottomCenterAnchor = CGPoint(x: 0.5, y: 0.0)
+
+        // Корректируем position
+        let correctedPosition = CGPoint(
+            x: layer.frame.origin.x + bottomCenterAnchor.x * bounds.width,
+            y: layer.frame.origin.y + bottomCenterAnchor.y * bounds.height
+        )
+
+        // Устанавливаем anchorPoint без анимации
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        layer.anchorPoint = bottomCenterAnchor
+        layer.position = correctedPosition
+        CATransaction.commit()
 
         // Fade animation
         NSAnimationContext.runAnimationGroup { context in
@@ -177,16 +217,22 @@ class FloatingPanel: NSPanel {
             animator().alphaValue = 0
         }
 
-        // Scale + translate animation
+        // Scale down animation
         let anim = CABasicAnimation(keyPath: "transform")
-        anim.toValue = CATransform3DMakeAffineTransform(targetTransform)
+        anim.toValue = CATransform3DMakeScale(scale, scale, 1.0)
         anim.duration = Constants.Animation.hideDuration
         anim.timingFunction = CAMediaTimingFunction(name: .easeIn)
-        layer.add(anim, forKey: "transformOut")
+        layer.add(anim, forKey: "scaleOut")
 
         // Completion after animation
         DispatchQueue.main.asyncAfter(deadline: .now() + Constants.Animation.hideDuration) { [weak self] in
-            self?.contentView?.layer?.setAffineTransform(.identity)
+            CATransaction.begin()
+            CATransaction.setDisableActions(true)
+            layer.anchorPoint = originalAnchor
+            layer.position = originalPosition
+            layer.transform = CATransform3DIdentity
+            CATransaction.commit()
+
             self?.orderOut(nil)
             completion?()
         }
