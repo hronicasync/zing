@@ -83,6 +83,7 @@ struct CopyButton: View {
             Image(systemName: isCopied ? "checkmark" : "doc.on.doc")
                 .font(.system(size: Constants.UI.copyIconSize, weight: .medium))
                 .foregroundColor(isCopied ? .green : Constants.Colors.primaryText.opacity(isHovered ? 1.0 : 0.6))
+                .frame(width: Constants.UI.copyIconSize, height: Constants.UI.copyIconSize)
                 .contentTransition(.symbolEffect(.replace))
         }
         .buttonStyle(.plain)

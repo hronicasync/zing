@@ -61,8 +61,12 @@ struct OutputField: View {
         min(max(textHeight, Constants.UI.inputMinHeight), Constants.UI.inputMaxHeight)
     }
 
+    private var isSingleLine: Bool {
+        textHeight <= Constants.UI.inputMinHeight
+    }
+
     var body: some View {
-        HStack(alignment: .top, spacing: Constants.UI.inputSpacing) {
+        HStack(alignment: isSingleLine ? .center : .top, spacing: Constants.UI.inputSpacing) {
             ZStack(alignment: .topLeading) {
                 // Hidden text for height calculation
                 Text(text.isEmpty ? " " : text)
