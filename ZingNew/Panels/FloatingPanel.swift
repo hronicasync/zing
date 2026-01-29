@@ -13,6 +13,12 @@ class FloatingPanel: NSPanel {
 
     private var originalSize: NSSize = .zero
 
+    /// Reference to hosting view for dynamic resizing
+    private var hostingView: NSHostingView<TranslatorView>?
+
+    /// Observer for size changes
+    private var sizeObserver: NSObjectProtocol?
+
     /// Extra padding around content to allow spring overshoot without clipping
     private static let animationPadding: CGFloat = 20
 
@@ -72,39 +78,83 @@ class FloatingPanel: NSPanel {
         // Create SwiftUI hosting view with injected ViewModel
         let translatorView = TranslatorView(viewModel: viewModel)
         let hostingView = NSHostingView(rootView: translatorView)
-        let fittingSize = hostingView.fittingSize
+        panel.hostingView = hostingView
+
+        let padding = animationPadding
 
         // Wrapper view with extra padding for spring animation overshoot
-        let padding = animationPadding
-        let wrapperSize = NSSize(
-            width: fittingSize.width + padding * 2,
-            height: fittingSize.height + padding * 2
-        )
-
-        let wrapperView = NSView(frame: NSRect(origin: .zero, size: wrapperSize))
+        let wrapperView = NSView()
         wrapperView.wantsLayer = true
         wrapperView.layer?.masksToBounds = false  // Critical: allow spring overshoot
+        wrapperView.translatesAutoresizingMaskIntoConstraints = false
 
-        // Center hostingView inside wrapper with padding
+        // Configure hostingView for Auto Layout
         hostingView.wantsLayer = true
         hostingView.layer?.masksToBounds = false
-        hostingView.frame = NSRect(
-            x: padding,
-            y: padding,
-            width: fittingSize.width,
-            height: fittingSize.height
-        )
+        hostingView.translatesAutoresizingMaskIntoConstraints = false
+        hostingView.setContentHuggingPriority(.required, for: .horizontal)
+        hostingView.setContentHuggingPriority(.required, for: .vertical)
+
         wrapperView.addSubview(hostingView)
 
         // Set wrapper as content view
         panel.contentView = wrapperView
-        panel.setContentSize(wrapperSize)
-        panel.originalSize = wrapperSize
+
+        // Auto Layout constraints: hostingView with padding inside wrapper
+        NSLayoutConstraint.activate([
+            hostingView.leadingAnchor.constraint(equalTo: wrapperView.leadingAnchor, constant: padding),
+            hostingView.trailingAnchor.constraint(equalTo: wrapperView.trailingAnchor, constant: -padding),
+            hostingView.topAnchor.constraint(equalTo: wrapperView.topAnchor, constant: padding),
+            hostingView.bottomAnchor.constraint(equalTo: wrapperView.bottomAnchor, constant: -padding)
+        ])
+
+        // Initial size
+        panel.updatePanelSize()
+
+        // Observe size changes
+        panel.setupSizeObserver()
 
         // Center on main screen
         panel.centerOnMainScreen()
 
         return panel
+    }
+
+    /// Update panel size based on hostingView's fittingSize
+    private func updatePanelSize() {
+        guard let hostingView = hostingView else { return }
+
+        let fittingSize = hostingView.fittingSize
+        let padding = FloatingPanel.animationPadding
+        let newSize = NSSize(
+            width: fittingSize.width + padding * 2,
+            height: fittingSize.height + padding * 2
+        )
+
+        if newSize != originalSize {
+            setContentSize(newSize)
+            originalSize = newSize
+        }
+    }
+
+    /// Setup observer for hostingView frame changes
+    private func setupSizeObserver() {
+        guard let hostingView = hostingView else { return }
+
+        hostingView.postsFrameChangedNotifications = true
+        sizeObserver = NotificationCenter.default.addObserver(
+            forName: NSView.frameDidChangeNotification,
+            object: hostingView,
+            queue: .main
+        ) { [weak self] _ in
+            self?.updatePanelSize()
+        }
+    }
+
+    deinit {
+        if let observer = sizeObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
     }
 
     /// Center the panel on the main screen
@@ -137,9 +187,9 @@ class FloatingPanel: NSPanel {
         // Initial state for animation
         alphaValue = 0
 
-        // Get hostingView (first subview of wrapper) for scale animation
+        // Get hostingView for scale animation
         // This allows spring overshoot to extend into the wrapper padding
-        guard let hostingView = contentView?.subviews.first,
+        guard let hostingView = self.hostingView,
               let layer = hostingView.layer else {
             makeKeyAndOrderFront(nil)
             alphaValue = 1
@@ -205,8 +255,8 @@ class FloatingPanel: NSPanel {
 
     /// Hide the panel with fade + scale animation
     func hideAnimated(completion: (() -> Void)? = nil) {
-        // Get hostingView (first subview of wrapper) for scale animation
-        guard let hostingView = contentView?.subviews.first,
+        // Get hostingView for scale animation
+        guard let hostingView = self.hostingView,
               let layer = hostingView.layer else {
             orderOut(nil)
             completion?()
