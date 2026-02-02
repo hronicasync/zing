@@ -16,6 +16,7 @@ struct NativeTextEditor: NSViewRepresentable {
     var textColor: NSColor = .white
     var placeholderColor: NSColor = .white.withAlphaComponent(0.7)
     var padding: CGFloat = 12
+    var isEditable: Bool = true
     var onHeightChange: ((CGFloat) -> Void)?
     var onCopyWithoutSelection: (() -> Void)?
     var onClearInput: (() -> Void)?
@@ -53,9 +54,14 @@ struct NativeTextEditor: NSViewRepresentable {
         // Focus ring
         textView.focusRingType = .none
 
-        // Keyboard shortcut callbacks
-        textView.onCopyWithoutSelection = onCopyWithoutSelection
-        textView.onClearInput = onClearInput
+        // Editable state
+        textView.isEditable = isEditable
+
+        // Keyboard shortcut callbacks (only for editable fields)
+        if isEditable {
+            textView.onCopyWithoutSelection = onCopyWithoutSelection
+            textView.onClearInput = onClearInput
+        }
 
         textView.delegate = context.coordinator
 
@@ -74,8 +80,12 @@ struct NativeTextEditor: NSViewRepresentable {
         textView.font = font
         textView.textColor = textColor
         textView.textContainerInset = NSSize(width: padding, height: padding)
-        textView.onCopyWithoutSelection = onCopyWithoutSelection
-        textView.onClearInput = onClearInput
+        textView.isEditable = isEditable
+
+        if isEditable {
+            textView.onCopyWithoutSelection = onCopyWithoutSelection
+            textView.onClearInput = onClearInput
+        }
 
         // Calculate and report height
         DispatchQueue.main.async {
