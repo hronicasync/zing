@@ -66,42 +66,48 @@ struct OutputField: View {
     }
 
     var body: some View {
-        HStack(alignment: isSingleLine ? .center : .top, spacing: Constants.UI.inputSpacing) {
-            ZStack(alignment: .topLeading) {
-                // Hidden text for height calculation
-                Text(text.isEmpty ? " " : text)
-                    .font(Constants.Typography.inputFont)
-                    .foregroundColor(.clear)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(
-                        GeometryReader { geometry in
-                            Color.clear.preference(
-                                key: TextHeightPreferenceKey.self,
-                                value: geometry.size.height
-                            )
-                        }
-                    )
-
-                // Visible text or placeholder
-                if text.isEmpty {
-                    Text("Перевод")
+        ZStack(alignment: .topTrailing) {
+            // ScrollView takes full width - scrollbar at absolute right edge
+            ScrollView(.vertical, showsIndicators: true) {
+                ZStack(alignment: .topLeading) {
+                    // Hidden text for height calculation
+                    Text(text.isEmpty ? " " : text)
                         .font(Constants.Typography.inputFont)
-                        .foregroundColor(Constants.Colors.secondaryText)
-                } else {
-                    Text(text)
-                        .font(Constants.Typography.inputFont)
-                        .foregroundColor(Constants.Colors.primaryText)
-                        .textSelection(.enabled)
+                        .foregroundColor(.clear)
                         .fixedSize(horizontal: false, vertical: true)
                         .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(
+                            GeometryReader { geometry in
+                                Color.clear.preference(
+                                    key: TextHeightPreferenceKey.self,
+                                    value: geometry.size.height
+                                )
+                            }
+                        )
+
+                    // Visible text or placeholder
+                    if text.isEmpty {
+                        Text("Перевод")
+                            .font(Constants.Typography.inputFont)
+                            .foregroundColor(Constants.Colors.secondaryText)
+                    } else {
+                        Text(text)
+                            .font(Constants.Typography.inputFont)
+                            .foregroundColor(Constants.Colors.primaryText)
+                            .textSelection(.enabled)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
                 }
+                .padding(.trailing, 32)  // Space for copy button
             }
 
-            // Always show copy button, but disable when empty
+            // Copy button overlaid at top-right corner
             CopyButton(action: onCopy, isCopied: $isCopied)
                 .disabled(text.isEmpty)
                 .opacity(text.isEmpty ? 0.3 : 1.0)
+                .padding(.top, 8)
+                .padding(.trailing, 8)
         }
         .padding(Constants.UI.inputPadding)
         .frame(height: calculatedHeight)
