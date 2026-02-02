@@ -67,54 +67,71 @@ struct OutputField: View {
 
     var body: some View {
         ZStack(alignment: .topTrailing) {
-            // ScrollView takes full width - scrollbar at absolute right edge
-            ScrollView(.vertical, showsIndicators: true) {
-                ZStack(alignment: .topLeading) {
-                    // Hidden text for height calculation
-                    Text(text.isEmpty ? " " : text)
-                        .font(Constants.Typography.inputFont)
-                        .foregroundColor(.clear)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(
-                            GeometryReader { geometry in
-                                Color.clear.preference(
-                                    key: TextHeightPreferenceKey.self,
-                                    value: geometry.size.height
-                                )
-                            }
-                        )
-
-                    // Visible text or placeholder
-                    if text.isEmpty {
-                        Text("Перевод")
-                            .font(Constants.Typography.inputFont)
-                            .foregroundColor(Constants.Colors.secondaryText)
-                    } else {
-                        Text(text)
-                            .font(Constants.Typography.inputFont)
-                            .foregroundColor(Constants.Colors.primaryText)
-                            .textSelection(.enabled)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                    }
+            // Content with conditional vertical centering for single-line text
+            if isSingleLine {
+                // Single-line: vertically centered (like SourceInputField)
+                VStack {
+                    Spacer()
+                    scrollViewContent
+                    Spacer()
                 }
-                .padding(.trailing, 32)  // Space for copy button
+            } else {
+                // Multi-line: top-aligned
+                scrollViewContent
             }
 
             // Copy button overlaid at top-right corner
             CopyButton(action: onCopy, isCopied: $isCopied)
                 .disabled(text.isEmpty)
                 .opacity(text.isEmpty ? 0.3 : 1.0)
-                .padding(.top, 8)
-                .padding(.trailing, 8)
+                .padding(.top, 12)
+                .padding(.trailing, 16)
         }
-        .padding(Constants.UI.inputPadding)
         .frame(height: calculatedHeight)
         .background(Constants.Colors.inputBackground)
         .clipShape(RoundedRectangle(cornerRadius: Constants.UI.inputCornerRadius))
         .onPreferenceChange(TextHeightPreferenceKey.self) { height in
             textHeight = height + Constants.UI.inputPadding * 2
+        }
+    }
+
+    // ScrollView content with proper padding to avoid scrollbar/button overlap
+    private var scrollViewContent: some View {
+        ScrollView(.vertical, showsIndicators: true) {
+            ZStack(alignment: .topLeading) {
+                // Hidden text for height calculation
+                Text(text.isEmpty ? " " : text)
+                    .font(Constants.Typography.inputFont)
+                    .foregroundColor(.clear)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(
+                        GeometryReader { geometry in
+                            Color.clear.preference(
+                                key: TextHeightPreferenceKey.self,
+                                value: geometry.size.height
+                            )
+                        }
+                    )
+
+                // Visible text or placeholder
+                if text.isEmpty {
+                    Text("Перевод")
+                        .font(Constants.Typography.inputFont)
+                        .foregroundColor(Constants.Colors.secondaryText)
+                } else {
+                    Text(text)
+                        .font(Constants.Typography.inputFont)
+                        .foregroundColor(Constants.Colors.primaryText)
+                        .textSelection(.enabled)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            }
+            .padding(.top, 12)  // Space for copy button (prevents text above button)
+            .padding(.leading, Constants.UI.inputPadding)
+            .padding(.trailing, 40)  // Space for copy button + scrollbar
+            .padding(.bottom, Constants.UI.inputPadding)
         }
     }
 }
