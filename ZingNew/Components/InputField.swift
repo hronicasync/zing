@@ -66,7 +66,7 @@ struct OutputField: View {
     }
 
     var body: some View {
-        ZStack(alignment: .topTrailing) {
+        ZStack(alignment: isSingleLine ? .trailing : .topTrailing) {
             // Content with conditional vertical centering for single-line text
             if isSingleLine {
                 // Single-line: vertically centered (like SourceInputField)
@@ -80,11 +80,11 @@ struct OutputField: View {
                 scrollViewContent
             }
 
-            // Copy button overlaid at top-right corner
+            // Copy button overlaid at right edge (centered for single-line, top for multi-line)
             CopyButton(action: onCopy, isCopied: $isCopied)
                 .disabled(text.isEmpty)
                 .opacity(text.isEmpty ? 0.3 : 1.0)
-                .padding(.top, 12)
+                .padding(.top, isSingleLine ? 0 : 12)
                 .padding(.trailing, 16)
         }
         .frame(height: calculatedHeight)
