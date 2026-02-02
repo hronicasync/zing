@@ -119,6 +119,7 @@ struct OutputField: View {
                     Text("Перевод")
                         .font(Constants.Typography.inputFont)
                         .foregroundColor(Constants.Colors.secondaryText)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 } else {
                     Text(text)
                         .font(Constants.Typography.inputFont)
@@ -128,7 +129,7 @@ struct OutputField: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
-            .padding(.top, 12)  // Space for copy button (prevents text above button)
+            .padding(.top, isSingleLine ? 0 : 12)  // Conditional: no top padding for centered single-line
             .padding(.leading, Constants.UI.inputPadding)
             .padding(.trailing, 40)  // Space for copy button + scrollbar
             .padding(.bottom, Constants.UI.inputPadding)
