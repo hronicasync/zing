@@ -16,6 +16,7 @@ struct NativeTextEditor: NSViewRepresentable {
     var textColor: NSColor = .white
     var placeholderColor: NSColor = .white.withAlphaComponent(0.7)
     var padding: CGFloat = 12
+    var trailingPadding: CGFloat? = nil  // Optional asymmetric trailing padding
     var isEditable: Bool = true
     var onHeightChange: ((CGFloat) -> Void)?
     var onCopyWithoutSelection: (() -> Void)?
@@ -45,6 +46,12 @@ struct NativeTextEditor: NSViewRepresentable {
         textView.textContainerInset = NSSize(width: padding, height: padding)
         textView.textContainer?.lineFragmentPadding = 0
         textView.textContainer?.widthTracksTextView = true
+
+        // Configure asymmetric padding if specified
+        if let trailing = trailingPadding {
+            textView.textContainer?.widthTracksTextView = false
+            // Width will be set in updateNSView when frame size is known
+        }
 
         // Placeholder setup
         textView.placeholderString = placeholder
@@ -81,6 +88,15 @@ struct NativeTextEditor: NSViewRepresentable {
         textView.textColor = textColor
         textView.textContainerInset = NSSize(width: padding, height: padding)
         textView.isEditable = isEditable
+
+        // Update text container width for asymmetric trailing padding
+        if let trailing = trailingPadding {
+            textView.textContainer?.widthTracksTextView = false
+            let containerWidth = textView.frame.width - padding - trailing
+            textView.textContainer?.size.width = containerWidth
+        } else {
+            textView.textContainer?.widthTracksTextView = true
+        }
 
         if isEditable {
             textView.onCopyWithoutSelection = onCopyWithoutSelection
@@ -166,10 +182,13 @@ class PlaceholderTextView: NSTextView {
                 .foregroundColor: placeholderColor
             ]
             let inset = textContainerInset
+            let trailingPadding = (textContainer?.widthTracksTextView == false)
+                ? bounds.width - (inset.width + (textContainer?.size.width ?? 0))
+                : inset.width
             let rect = NSRect(
                 x: inset.width,
                 y: inset.height,
-                width: bounds.width - (inset.width * 2),
+                width: bounds.width - inset.width - trailingPadding,
                 height: bounds.height - (inset.height * 2)
             )
             placeholderString.draw(in: rect, withAttributes: attrs)

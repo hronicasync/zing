@@ -75,6 +75,7 @@ struct OutputField: View {
                 textColor: .white,
                 placeholderColor: .white.withAlphaComponent(0.7),
                 padding: Constants.UI.inputPadding,
+                trailingPadding: Constants.UI.outputTrailingPadding,
                 isEditable: false,
                 onHeightChange: { height in
                     textHeight = height

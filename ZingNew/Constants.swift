@@ -62,6 +62,7 @@ enum Constants {
         // Icon sizes
         static let iconSize: CGFloat = 20
         static let copyIconSize: CGFloat = 16
+        static let outputTrailingPadding: CGFloat = 44  // Button area (32) + spacing (12)
         static let closeIconSize: CGFloat = 16
     }
 
